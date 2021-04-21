@@ -95,6 +95,7 @@ class _CircularSliderState extends State<CircularSliderPaint> {
   @override
   void initState() {
     super.initState();
+    this._laps = widget.laps;
     _calculatePaintData();
   }
 
