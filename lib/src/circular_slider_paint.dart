@@ -11,6 +11,9 @@ enum SlidingState { none, endIsBiggerThanStart, endIsSmallerThanStart }
 
 typedef SelectionChanged<T> = void Function(T a, T b, T c);
 
+const MAX_LAPS = 9;
+const MAX_SLIDER_VALUE = 99;
+
 class CircularSliderPaint extends StatefulWidget {
   final CircularSliderMode mode;
   final int init;
@@ -31,26 +34,25 @@ class CircularSliderPaint extends StatefulWidget {
   final bool shouldCountLaps;
   final int laps;
 
-  CircularSliderPaint({
-    @required this.mode,
-    @required this.divisions,
-    @required this.init,
-    @required this.end,
-    this.child,
-    @required this.primarySectors,
-    @required this.secondarySectors,
-    @required this.onSelectionChange,
-    @required this.onSelectionEnd,
-    @required this.baseColor,
-    @required this.selectionColor,
-    @required this.handlerColor,
-    @required this.handlerOutterRadius,
-    @required this.showRoundedCapInSelection,
-    @required this.showHandlerOutter,
-    @required this.sliderStrokeWidth,
-    @required this.shouldCountLaps,
-    @required this.laps
-  });
+  CircularSliderPaint(
+      {@required this.mode,
+      @required this.divisions,
+      @required this.init,
+      @required this.end,
+      this.child,
+      @required this.primarySectors,
+      @required this.secondarySectors,
+      @required this.onSelectionChange,
+      @required this.onSelectionEnd,
+      @required this.baseColor,
+      @required this.selectionColor,
+      @required this.handlerColor,
+      @required this.handlerOutterRadius,
+      @required this.showRoundedCapInSelection,
+      @required this.showHandlerOutter,
+      @required this.sliderStrokeWidth,
+      @required this.shouldCountLaps,
+      @required this.laps});
 
   @override
   _CircularSliderState createState() => _CircularSliderState();
@@ -116,10 +118,10 @@ class _CircularSliderState extends State<CircularSliderPaint> {
         CustomPanGestureRecognizer:
             GestureRecognizerFactoryWithHandlers<CustomPanGestureRecognizer>(
           () => CustomPanGestureRecognizer(
-                onPanDown: _onPanDown,
-                onPanUpdate: _onPanUpdate,
-                onPanEnd: _onPanEnd,
-              ),
+            onPanDown: _onPanDown,
+            onPanUpdate: _onPanUpdate,
+            onPanEnd: _onPanEnd,
+          ),
           (CustomPanGestureRecognizer instance) {},
         ),
       },
@@ -140,6 +142,7 @@ class _CircularSliderState extends State<CircularSliderPaint> {
     );
   }
 
+  bool end_reached = false;
   void _calculatePaintData() {
     var initPercent = isDoubleHandler
         ? valueToPercentage(widget.init, widget.divisions)
@@ -158,8 +161,14 @@ class _CircularSliderState extends State<CircularSliderPaint> {
     if (widget.shouldCountLaps) {
       var newSlidingState = _calculateSlidingState(_startAngle, _endAngle);
       if (isSingleHandler) {
-        _laps = _calculateLapsForsSingleHandler(
+        var calculated_laps;
+        calculated_laps = _calculateLapsForsSingleHandler(
             _endAngle, previousEndAngle, _slidingState, _laps);
+        if (calculated_laps == MAX_LAPS + 1) {
+          //print('IN _calculatePaintData endPercent = ${endPercent.toString()}  widget.end = ${widget.end.toString()} widget.divisions = ${widget.divisions.toString()} previousStartAngle = ${previousStartAngle.toString()}  _startAngle = ${_startAngle.toString()}  _endAngle = ${_endAngle.toString()}  sweep = ${sweep.toString()}  _sweepAngle = ${_sweepAngle.toString()} endReached = ${end_reached.toString()} / laps = ${calculated_laps.toString()}');
+        } else {
+          _laps = calculated_laps;
+        }
         _slidingState = newSlidingState;
       } else {
         // is double handler
@@ -275,7 +284,39 @@ class _CircularSliderState extends State<CircularSliderPaint> {
         widget.onSelectionEnd(newValue, widget.end, _laps);
       }
     } else {
-      widget.onSelectionChange(widget.init, newValue, _laps);
+      if (_laps == MAX_LAPS &&
+          (newValue == MAX_SLIDER_VALUE || newValue == MAX_SLIDER_VALUE + 1)) {
+        end_reached = true;
+        newValue = MAX_SLIDER_VALUE;
+        _laps = MAX_LAPS;
+      }
+      if (_laps == 9 && newValue == MAX_SLIDER_VALUE - 1) {
+        end_reached = false;
+      }
+
+      print(
+          'calling widget.onSelectionChange end_reached = ${end_reached.toString()} with newValue = ${newValue.toString()} with _laps = ${_laps.toString()}');
+
+      ////////////////////////////////////////////////////////////////////////
+      ///////// custom Code : refreshing _endAngle after the screen is touched
+      ////////////////////////////////////////////////////////////////////////
+
+      var initPercent = isDoubleHandler
+          ? valueToPercentage(widget.init, widget.divisions)
+          : 0.0;
+      var endPercent = valueToPercentage(widget.end, widget.divisions);
+      var sweep = getSweepAngle(initPercent, endPercent);
+      var previousStartAngle = _startAngle;
+      var previousEndAngle = _endAngle;
+
+      _startAngle = isDoubleHandler ? percentageToRadians(initPercent) : 0.0;
+      _endAngle = percentageToRadians(endPercent);
+      _sweepAngle = percentageToRadians(sweep.abs());
+
+      if (!end_reached) {
+        widget.onSelectionChange(widget.init, newValue, _laps);
+      }
+
       if (isPanEnd) {
         widget.onSelectionEnd(widget.init, newValue, _laps);
       }
@@ -288,6 +329,10 @@ class _CircularSliderState extends State<CircularSliderPaint> {
     }
     RenderBox renderBox = context.findRenderObject();
     var position = renderBox.globalToLocal(details);
+
+    var angle = coordinatesToRadians(_painter.center, position);
+    var percentage = radiansToPercentage(angle);
+    var newValue = percentageToValue(percentage, widget.divisions);
 
     if (position == null) {
       return false;
