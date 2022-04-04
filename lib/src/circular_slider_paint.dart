@@ -11,8 +11,10 @@ enum SlidingState { none, endIsBiggerThanStart, endIsSmallerThanStart }
 
 typedef SelectionChanged<T> = void Function(T a, T b, T c);
 
+const MIN_LAPS = 0;
 const MAX_LAPS = 9;
 const MAX_SLIDER_VALUE = 99;
+const MIN_SLIDER_VALUE = 1;
 
 class CircularSliderPaint extends StatefulWidget {
   final CircularSliderMode mode;
@@ -289,14 +291,23 @@ class _CircularSliderState extends State<CircularSliderPaint> {
         end_reached = true;
         newValue = MAX_SLIDER_VALUE;
         _laps = MAX_LAPS;
+      } else if (_laps == MIN_LAPS && newValue == 0 ||
+          _laps == MIN_LAPS && newValue == 100) {
+        end_reached = true;
+        newValue = MIN_SLIDER_VALUE;
       }
-      if (_laps == 9 && newValue == MAX_SLIDER_VALUE - 1) {
+
+      if (_laps == MAX_LAPS && newValue == MAX_SLIDER_VALUE - 1) {
+        end_reached = false;
+      } else if (_laps == MIN_LAPS && (newValue == MIN_SLIDER_VALUE + 1)) {
         end_reached = false;
       }
 
-      print(
-          'calling widget.onSelectionChange end_reached = ${end_reached.toString()} with newValue = ${newValue.toString()} with _laps = ${_laps.toString()}');
-
+      /*print('calling widget.onSelectionChange end_reached = ${end_reached
+          .toString()} with newValue = ${newValue
+          .toString()} with _laps = ${_laps
+          .toString()}');
+      */
       ////////////////////////////////////////////////////////////////////////
       ///////// custom Code : refreshing _endAngle after the screen is touched
       ////////////////////////////////////////////////////////////////////////
