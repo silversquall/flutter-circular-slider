@@ -1,5 +1,11 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'base_painter.dart';
 import 'slider_painter.dart';
@@ -100,7 +106,31 @@ class _CircularSliderState extends State<CircularSliderPaint> {
   void initState() {
     super.initState();
     this._laps = widget.laps;
+    initImage();
     _calculatePaintData();
+  }
+
+  ui.Image image;
+  bool isImageloaded = false;
+
+  Future<Null> initImage() async {
+    print('IN initImage');
+    final ByteData data =
+        await rootBundle.load('assets/images/channel_status_icon.png');
+    image = await loadImage(new Uint8List.view(data.buffer));
+  }
+
+  Future<ui.Image> loadImage(List<int> img) async {
+    final Completer<ui.Image> completer = new Completer();
+    ui.decodeImageFromList(img, (ui.Image img) {
+      setState(() {
+        print('img loaded');
+        isImageloaded = true;
+        _calculatePaintData();
+      });
+      return completer.complete(img);
+    });
+    return completer.future;
   }
 
   // we need to update this widget both with gesture detector but
@@ -108,9 +138,9 @@ class _CircularSliderState extends State<CircularSliderPaint> {
   @override
   void didUpdateWidget(CircularSliderPaint oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.init != widget.init || oldWidget.end != widget.end) {
-      _calculatePaintData();
-    }
+    //if (oldWidget.init != widget.init || oldWidget.end != widget.end) {
+    _calculatePaintData();
+    // }
   }
 
   @override
@@ -136,10 +166,11 @@ class _CircularSliderState extends State<CircularSliderPaint> {
           sliderStrokeWidth: widget.sliderStrokeWidth,
         ),
         foregroundPainter: _painter,
-        child: Padding(
+        /* child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: widget.child,
         ),
+        */
       ),
     );
   }
@@ -189,17 +220,17 @@ class _CircularSliderState extends State<CircularSliderPaint> {
     }
 
     _painter = SliderPainter(
-      mode: widget.mode,
-      startAngle: _startAngle,
-      endAngle: _endAngle,
-      sweepAngle: _sweepAngle,
-      selectionColor: widget.selectionColor,
-      handlerColor: widget.handlerColor,
-      handlerOutterRadius: widget.handlerOutterRadius,
-      showRoundedCapInSelection: widget.showRoundedCapInSelection,
-      showHandlerOutter: widget.showHandlerOutter,
-      sliderStrokeWidth: widget.sliderStrokeWidth,
-    );
+        mode: widget.mode,
+        startAngle: _startAngle,
+        endAngle: _endAngle,
+        sweepAngle: _sweepAngle,
+        selectionColor: widget.selectionColor,
+        handlerColor: widget.handlerColor,
+        handlerOutterRadius: widget.handlerOutterRadius,
+        showRoundedCapInSelection: widget.showRoundedCapInSelection,
+        showHandlerOutter: widget.showHandlerOutter,
+        sliderStrokeWidth: widget.sliderStrokeWidth,
+        image: image);
   }
 
   int _calculateLapsForsSingleHandler(
