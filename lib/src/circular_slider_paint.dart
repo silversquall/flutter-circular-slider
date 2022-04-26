@@ -41,26 +41,29 @@ class CircularSliderPaint extends StatefulWidget {
   final double sliderStrokeWidth;
   final bool shouldCountLaps;
   final int laps;
+  final bool online;
 
-  CircularSliderPaint(
-      {@required this.mode,
-      @required this.divisions,
-      @required this.init,
-      @required this.end,
-      this.child,
-      @required this.primarySectors,
-      @required this.secondarySectors,
-      @required this.onSelectionChange,
-      @required this.onSelectionEnd,
-      @required this.baseColor,
-      @required this.selectionColor,
-      @required this.handlerColor,
-      @required this.handlerOutterRadius,
-      @required this.showRoundedCapInSelection,
-      @required this.showHandlerOutter,
-      @required this.sliderStrokeWidth,
-      @required this.shouldCountLaps,
-      @required this.laps});
+  CircularSliderPaint({
+    @required this.mode,
+    @required this.divisions,
+    @required this.init,
+    @required this.end,
+    this.child,
+    @required this.primarySectors,
+    @required this.secondarySectors,
+    @required this.onSelectionChange,
+    @required this.onSelectionEnd,
+    @required this.baseColor,
+    @required this.selectionColor,
+    @required this.handlerColor,
+    @required this.handlerOutterRadius,
+    @required this.showRoundedCapInSelection,
+    @required this.showHandlerOutter,
+    @required this.sliderStrokeWidth,
+    @required this.shouldCountLaps,
+    @required this.laps,
+    @required this.online,
+  });
 
   @override
   _CircularSliderState createState() => _CircularSliderState();
@@ -107,26 +110,36 @@ class _CircularSliderState extends State<CircularSliderPaint> {
     super.initState();
     this._laps = widget.laps;
     initImage();
-    _calculatePaintData();
   }
 
-  ui.Image image;
-  bool isImageloaded = false;
+  ui.Image image_online;
+  ui.Image image_offline;
+  bool isOnlineImageloaded = false;
+  bool isOfflineImageloaded = false;
 
   Future<Null> initImage() async {
     print('IN initImage');
-    final ByteData data =
+    final ByteData data_channel_status_icon =
         await rootBundle.load('assets/images/channel_status_icon.png');
-    image = await loadImage(new Uint8List.view(data.buffer));
+    image_online = await loadImage(
+        new Uint8List.view(data_channel_status_icon.buffer),
+        isOnlineImageloaded);
+
+    final ByteData data_channel_status_icon_offline =
+        await rootBundle.load('assets/images/channel_status_icon_offline.png');
+    image_offline = await loadImage(
+        new Uint8List.view(data_channel_status_icon_offline.buffer),
+        isOfflineImageloaded);
+
+    _calculatePaintData();
   }
 
-  Future<ui.Image> loadImage(List<int> img) async {
+  Future<ui.Image> loadImage(List<int> img, bool loaded) async {
     final Completer<ui.Image> completer = new Completer();
     ui.decodeImageFromList(img, (ui.Image img) {
       setState(() {
         print('img loaded');
-        isImageloaded = true;
-        _calculatePaintData();
+        loaded = true;
       });
       return completer.complete(img);
     });
@@ -157,21 +170,20 @@ class _CircularSliderState extends State<CircularSliderPaint> {
           (CustomPanGestureRecognizer instance) {},
         ),
       },
-      child: CustomPaint(
-        painter: BasePainter(
-          baseColor: widget.baseColor,
-          selectionColor: widget.selectionColor,
-          primarySectors: widget.primarySectors,
-          secondarySectors: widget.secondarySectors,
-          sliderStrokeWidth: widget.sliderStrokeWidth,
-        ),
-        foregroundPainter: _painter,
+      child:
+          // Stack(
+          //      children: [
+          CustomPaint(
+        painter: _painter,
+        //foregroundPainter: _painter_online,
         /* child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: widget.child,
         ),
         */
       ),
+      // Container(color: Colors.green, width: 20, height: 20,)
+      // ]),
     );
   }
 
@@ -230,7 +242,7 @@ class _CircularSliderState extends State<CircularSliderPaint> {
         showRoundedCapInSelection: widget.showRoundedCapInSelection,
         showHandlerOutter: widget.showHandlerOutter,
         sliderStrokeWidth: widget.sliderStrokeWidth,
-        image: image);
+        image: widget.online ? image_online : image_offline);
   }
 
   int _calculateLapsForsSingleHandler(

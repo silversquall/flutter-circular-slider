@@ -68,27 +68,28 @@ class SingleCircularSlider extends StatefulWidget {
   final bool shouldCountLaps;
 
   final int laps;
-  
-  SingleCircularSlider(
-    this.divisions,
-    this.position, {
-    this.height,
-    this.width,
-    this.child,
-    this.primarySectors,
-    this.secondarySectors,
-    this.baseColor,
-    this.selectionColor,
-    this.handlerColor,
-    this.onSelectionChange,
-    this.onSelectionEnd,
-    this.handlerOutterRadius,
-    this.showRoundedCapInSelection,
-    this.showHandlerOutter,
-    this.sliderStrokeWidth,
-    this.shouldCountLaps,
-    this.laps
-  })  : assert(position >= 0 && position <= divisions,
+
+  final bool online;
+
+  SingleCircularSlider(this.divisions, this.position,
+      {this.height,
+      this.width,
+      this.child,
+      this.primarySectors,
+      this.secondarySectors,
+      this.baseColor,
+      this.selectionColor,
+      this.handlerColor,
+      this.onSelectionChange,
+      this.onSelectionEnd,
+      this.handlerOutterRadius,
+      this.showRoundedCapInSelection,
+      this.showHandlerOutter,
+      this.sliderStrokeWidth,
+      this.shouldCountLaps,
+      this.laps,
+      this.online})
+      : assert(position >= 0 && position <= divisions,
             'init has to be > 0 and < divisions value'),
         assert(divisions >= 0 && divisions <= 300,
             'divisions has to be > 0 and <= 300');
@@ -112,6 +113,7 @@ class _SingleCircularSliderState extends State<SingleCircularSlider> {
         height: widget.height ?? 220,
         width: widget.width ?? 220,
         child: CircularSliderPaint(
+          online: widget.online,
           laps: widget.laps,
           mode: CircularSliderMode.singleHandler,
           init: 0,

@@ -39,9 +39,11 @@ class SliderPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    print('handlerColor is ${handlerColor.toString()}');
     Paint progress = _getPaint(color: selectionColor);
 
-    center = Offset(size.width / 2 - 25, size.height / 2 - 14);
+    center = Offset(
+        size.width / 2 - image.width / 2, size.height / 2 - image.height / 2);
     radius = min(size.width / 2, size.height / 2) - sliderStrokeWidth;
 
     canvas.drawArc(Rect.fromCircle(center: center, radius: radius),
