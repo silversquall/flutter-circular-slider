@@ -39,7 +39,6 @@ class SliderPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('handlerColor is ${handlerColor.toString()}');
     Paint progress = _getPaint(color: selectionColor);
 
     center = Offset(
