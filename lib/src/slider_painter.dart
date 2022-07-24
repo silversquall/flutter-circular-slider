@@ -39,6 +39,7 @@ class SliderPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (image != null) {
     Paint progress = _getPaint(color: selectionColor);
 
     center = Offset(
@@ -49,8 +50,7 @@ class SliderPainter extends CustomPainter {
         -pi / 2 + startAngle, sweepAngle, false, progress);
 
     endHandler = radiansToCoordinates(center, -pi / 2 + endAngle, radius);
-
-    if (image != null) {
+    
       // draw image
       canvas.drawImage(image, endHandler, Paint());
     }
