@@ -44,16 +44,23 @@ class SliderPainter extends CustomPainter {
 
       center = Offset(
           size.width / 2 - image.width / 2, size.height / 2 - image.height / 2);
-      radius = min(size.width / 2, size.height / 2) - sliderStrokeWidth + 5;
-
-      canvas.drawArc(Rect.fromCircle(center: center, radius: radius),
-          -pi / 2 + startAngle, sweepAngle, false, progress);
+      radius = min(size.width / 2, size.height / 2) - sliderStrokeWidth;
 
       endHandler = radiansToCoordinates(center, -pi / 2 + endAngle, radius);
 
-      // draw image
+      //rotation de l'image
+      rotate(canvas, endHandler.dx + image.width / 2,
+          endHandler.dy + image.height / 2, endAngle);
+
+      //draw
       canvas.drawImage(image, endHandler, Paint());
     }
+  }
+
+  void rotate(Canvas canvas, double cx, double cy, double angle) {
+    canvas.translate(cx, cy);
+    canvas.rotate(angle);
+    canvas.translate(-cx, -cy);
   }
 
   Paint _getPaint({@required Color color, double width, PaintingStyle style}) =>
