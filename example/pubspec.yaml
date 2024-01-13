@@ -22,3 +22,6 @@ flutter:
 
   assets:
     - images/background_morning.png
+
+dependency_overrides:
+  event_bus: 1.1.1

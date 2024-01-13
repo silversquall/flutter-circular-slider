@@ -3,9 +3,12 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:event_bus/event_bus.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hiko/src/events/ForceFrequencyEvent.dart';
 
 import 'base_painter.dart';
 import 'slider_painter.dart';
@@ -42,6 +45,7 @@ class CircularSliderPaint extends StatefulWidget {
   final bool shouldCountLaps;
   final int laps;
   final bool online;
+  final EventBus eventBus;
 
   CircularSliderPaint({
     @required this.mode,
@@ -63,6 +67,7 @@ class CircularSliderPaint extends StatefulWidget {
     @required this.shouldCountLaps,
     @required this.laps,
     @required this.online,
+    @required this.eventBus,
   });
 
   @override
@@ -110,6 +115,18 @@ class _CircularSliderState extends State<CircularSliderPaint> {
     super.initState();
     this._laps = widget.laps;
     initImage();
+    listenEvents();
+  }
+
+  StreamSubscription forceFrequencyStream;
+  listenEvents() {
+    forceFrequencyStream =
+        widget.eventBus.on<ForceFrequencyEvent>().listen((event) {
+      setState(() {
+        _laps = event.laps;
+        widget.onSelectionEnd(0, event.freq, _laps);
+      });
+    });
   }
 
   ui.Image image_online;

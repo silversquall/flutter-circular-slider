@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:event_bus/event_bus.dart';
 import 'package:flutter/material.dart';
+import 'package:hiko/src/events/ForceFrequencyEvent.dart';
 
 import 'circular_slider_paint.dart';
 
@@ -71,6 +75,7 @@ class SingleCircularSlider extends StatefulWidget {
 
   final bool online;
 
+  final EventBus eventBus;
   SingleCircularSlider(this.divisions, this.position,
       {this.height,
       this.width,
@@ -88,7 +93,8 @@ class SingleCircularSlider extends StatefulWidget {
       this.sliderStrokeWidth,
       this.shouldCountLaps,
       this.laps,
-      this.online})
+      this.online,
+      this.eventBus})
       : assert(position >= 0 && position <= divisions,
             'init has to be > 0 and < divisions value'),
         assert(divisions >= 0 && divisions <= 300,
@@ -100,11 +106,26 @@ class SingleCircularSlider extends StatefulWidget {
 
 class _SingleCircularSliderState extends State<SingleCircularSlider> {
   int _end;
+  int _laps;
 
   @override
   void initState() {
     super.initState();
     _end = widget.position;
+    _laps = widget.laps;
+    listenEvents();
+  }
+
+  StreamSubscription forceFrequencyStream;
+  listenEvents() {
+    forceFrequencyStream =
+        widget.eventBus.on<ForceFrequencyEvent>().listen((event) {
+      setState(() {
+        _end = event.freq;
+        _laps = event.laps;
+      });
+      // print('received event single_circular_slider with laps ${_laps.toString()} and end ${_end.toString()}');
+    });
   }
 
   @override
@@ -114,7 +135,7 @@ class _SingleCircularSliderState extends State<SingleCircularSlider> {
         width: widget.width ?? 220,
         child: CircularSliderPaint(
           online: widget.online,
-          laps: widget.laps,
+          laps: _laps,
           mode: CircularSliderMode.singleHandler,
           init: 0,
           end: _end,
@@ -123,6 +144,7 @@ class _SingleCircularSliderState extends State<SingleCircularSlider> {
           secondarySectors: widget.secondarySectors ?? 0,
           child: widget.child,
           onSelectionChange: (newInit, newEnd, laps) {
+            //print('-------- newEnd = ${newEnd.toString()} , laps = ${laps.toString()}');
             if (widget.onSelectionChange != null) {
               widget.onSelectionChange(newInit, newEnd, laps);
             }
@@ -144,6 +166,14 @@ class _SingleCircularSliderState extends State<SingleCircularSlider> {
           showRoundedCapInSelection: widget.showRoundedCapInSelection ?? false,
           showHandlerOutter: widget.showHandlerOutter ?? true,
           shouldCountLaps: widget.shouldCountLaps ?? false,
+          eventBus: widget.eventBus,
         ));
+  }
+
+  @override
+  void dispose() {
+    print('SingleCircularSlider dispose');
+    forceFrequencyStream?.cancel();
+    super.dispose();
   }
 }
